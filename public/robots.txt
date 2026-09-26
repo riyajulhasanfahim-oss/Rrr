@@ -1,0 +1,24 @@
+User-agent: *
+Allow: /
+Allow: /product/
+Allow: /category/
+Allow: /products
+Allow: /brands
+Allow: /store/
+Disallow: /admin/
+Disallow: /vendor/
+Disallow: /reseller/
+Disallow: /checkout
+Disallow: /cart
+Disallow: /orders
+Disallow: /my-chats
+Disallow: /payment/
+
+User-agent: Googlebot
+Allow: /
+Allow: /product/
+
+User-agent: Googlebot-Image
+Allow: /
+
+Sitemap: https://rjworldbd.com/sitemap.xml

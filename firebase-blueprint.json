@@ -1,0 +1,301 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "User profile data",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "name": { "type": "string" },
+        "email": { "type": "string" },
+        "phone": { "type": "string" },
+        "photo": { "type": "string" },
+        "role": { "type": "string" },
+        "language": { "type": "string" },
+        "wallet": { "type": "number" },
+        "createdAt": { "type": "number" }
+      },
+      "required": ["uid", "name", "email", "role", "createdAt"]
+    },
+    "Product": {
+      "title": "Product",
+      "description": "E-commerce product item",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "price": { "type": "number" },
+        "originalPrice": { "type": "number" },
+        "discount": { "type": "number" },
+        "category": { "type": "string" },
+        "categorySlug": { "type": "string" },
+        "brand": { "type": "string" },
+        "image": { "type": "string" },
+        "images": { "type": "array" },
+        "description": { "type": "string" },
+        "rating": { "type": "number" },
+        "reviews": { "type": "number" },
+        "inStock": { "type": "boolean" },
+        "stockCount": { "type": "number" },
+        "vendorId": { "type": "string" }
+      },
+      "required": ["id", "name", "price", "category", "image"]
+    },
+    "Order": {
+      "title": "Order",
+      "description": "Customer order",
+      "type": "object",
+      "properties": {
+        "orderId": { "type": "string" },
+        "userId": { "type": "string" },
+        "items": { "type": "array" },
+        "total": { "type": "number" },
+        "status": { "type": "string" },
+        "createdAt": { "type": "number" }
+      },
+      "required": ["orderId", "userId", "items", "total", "status", "createdAt"]
+    },
+    "PaymentVerification": {
+      "title": "Payment Verification",
+      "description": "Custom payment verification record for manual or SMS-assisted transaction verification",
+      "type": "object",
+      "properties": {
+        "paymentId": { "type": "string" },
+        "invoiceId": { "type": "string" },
+        "userId": { "type": "string" },
+        "userType": { "type": "string", "enum": ["customer", "reseller", "vendor"] },
+        "paymentMethod": { "type": "string", "enum": ["bkash", "nagad", "rocket", "upay"] },
+        "expectedAmount": { "type": "number" },
+        "transactionId": { "type": "string" },
+        "status": { "type": "string", "enum": ["pending", "verified", "rejected"] },
+        "senderNumber": { "type": "string" },
+        "receivedAmount": { "type": "number" },
+        "verifiedAt": { "type": "number" },
+        "createdAt": { "type": "number" },
+        "rejectionReason": { "type": "string" }
+      },
+      "required": [
+        "paymentId",
+        "invoiceId",
+        "userId",
+        "userType",
+        "paymentMethod",
+        "expectedAmount",
+        "transactionId",
+        "status",
+        "createdAt"
+      ]
+    },
+    "ResellerWallet": {
+      "title": "Reseller Wallet",
+      "description": "Reseller financial wallet balances and profit tracking",
+      "type": "object",
+      "properties": {
+        "resellerId": { "type": "string" },
+        "availableBalance": { "type": "number" },
+        "lockedBalance": { "type": "number" },
+        "totalBalance": { "type": "number" },
+        "pendingProfit": { "type": "number" },
+        "releasedProfit": { "type": "number" },
+        "cancelledProfit": { "type": "number" },
+        "createdAt": { "type": "number" },
+        "updatedAt": { "type": "number" }
+      },
+      "required": [
+        "resellerId",
+        "availableBalance",
+        "lockedBalance",
+        "totalBalance",
+        "pendingProfit",
+        "releasedProfit",
+        "cancelledProfit",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "ResellerWalletTransaction": {
+      "title": "Reseller Wallet Transaction",
+      "description": "Immutable ledger record of reseller wallet balance operations",
+      "type": "object",
+      "properties": {
+        "transactionId": { "type": "string" },
+        "resellerId": { "type": "string" },
+        "orderId": { "type": "string" },
+        "amount": { "type": "number" },
+        "type": { "type": "string" },
+        "status": { "type": "string" },
+        "balanceBefore": { "type": "object" },
+        "balanceAfter": { "type": "object" },
+        "description": { "type": "string" },
+        "createdAt": { "type": "number" },
+        "updatedAt": { "type": "number" }
+      },
+      "required": [
+        "transactionId",
+        "resellerId",
+        "orderId",
+        "amount",
+        "type",
+        "status",
+        "balanceBefore",
+        "balanceAfter",
+        "description",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "ResellerProduct": {
+      "title": "Reseller Product",
+      "description": "Reseller customized selling price and calculated profit for vendor products",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "resellerId": { "type": "string" },
+        "productId": { "type": "string" },
+        "vendorId": { "type": "string" },
+        "productName": { "type": "string" },
+        "vendorPrice": { "type": "number" },
+        "resellerSellingPrice": { "type": "number" },
+        "resellerProfit": { "type": "number" },
+        "status": { "type": "string" },
+        "createdAt": { "type": "number" },
+        "updatedAt": { "type": "number" }
+      },
+      "required": [
+        "id",
+        "resellerId",
+        "productId",
+        "vendorPrice",
+        "resellerSellingPrice",
+        "resellerProfit",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "ResellerOrder": {
+      "title": "Reseller Order",
+      "description": "Reseller customer orders, price snapshots, and pending profit records",
+      "type": "object",
+      "properties": {
+        "orderId": { "type": "string" },
+        "resellerId": { "type": "string" },
+        "vendorId": { "type": "string" },
+        "productId": { "type": "string" },
+        "quantity": { "type": "number" },
+        "vendorPrice": { "type": "number" },
+        "resellerSellingPrice": { "type": "number" },
+        "customerPaidAmount": { "type": "number" },
+        "resellerProfit": { "type": "number" },
+        "profitStatus": { "type": "string", "enum": ["PENDING", "CANCELLED", "RELEASED"] },
+        "orderStatus": { "type": "string" },
+        "paymentMethod": { "type": "string" },
+        "createdAt": { "type": "number" },
+        "updatedAt": { "type": "number" }
+      },
+      "required": [
+        "orderId",
+        "resellerId",
+        "vendorId",
+        "productId",
+        "quantity",
+        "vendorPrice",
+        "resellerSellingPrice",
+        "customerPaidAmount",
+        "resellerProfit",
+        "profitStatus",
+        "orderStatus",
+        "paymentMethod",
+        "createdAt",
+        "updatedAt"
+      ]
+    }
+  },
+  "firestore": {
+    "users/{userId}": { "schema": { "$ref": "#/entities/User" }, "description": "Users collection" },
+    "admins/{adminId}": { "description": "Admin users" },
+    "vendors/{vendorId}": { "description": "Vendor profiles" },
+    "resellers/{resellerId}": { "description": "Reseller profiles" },
+    "products/{productId}": { "schema": { "$ref": "#/entities/Product" }, "description": "Products catalog" },
+    "categories/{categoryId}": { "description": "Product categories" },
+    "brands/{brandId}": { "description": "Product brands" },
+    "banners/{bannerId}": { "description": "Home hero sliders and promotions" },
+    "orders/{orderId}": { "schema": { "$ref": "#/entities/Order" }, "description": "Orders collection" },
+    "orderItems/{itemId}": { "description": "Order line items" },
+    "carts/{userId}": { "description": "Shopping carts" },
+    "wishlists/{userId}": { "description": "User wishlists" },
+    "reviews/{reviewId}": { "description": "Product reviews" },
+    "ratings/{ratingId}": { "description": "Product ratings" },
+    "messages/{messageId}": { "description": "Chat messages" },
+    "chatRooms/{roomId}": { "description": "Chat rooms" },
+    "notifications/{notificationId}": { "description": "User notifications" },
+    "withdrawRequests/{requestId}": { "description": "Withdraw requests" },
+    "wallets/{walletId}": { "description": "Wallets" },
+    "transactions/{transactionId}": { "description": "Financial transactions" },
+    "commissions/{commissionId}": { "description": "Commissions records" },
+    "referrals/{referralId}": { "description": "Referral relationships" },
+    "mlmTree/{treeId}": { "description": "MLM tree structures" },
+    "ranks/{rankId}": { "description": "Leadership ranks" },
+    "vendorStores/{storeId}": { "description": "Vendor store profiles" },
+    "vendorFollowers/{followerId}": { "description": "Vendor shop followers" },
+    "shippingAddresses/{addressId}": { "description": "User shipping addresses" },
+    "couriers/{courierId}": { "description": "Courier shipping services" },
+    "tracking/{trackingId}": { "description": "Order shipment tracking" },
+    "paymentMethods/{methodId}": { "description": "Saved payment options" },
+    "coupons/{couponId}": { "description": "Promotional coupon codes" },
+    "supportTickets/{ticketId}": { "description": "Customer support tickets" },
+    "settings/{settingId}": { "description": "Global platform configurations" },
+    "languages/{langId}": { "description": "Language translations" },
+    "favorites/{favId}": { "description": "Favorite stores and shortcuts" },
+    "recentViews/{viewId}": { "description": "Recently viewed products" },
+    "searchHistory/{searchId}": { "description": "Search history queries" },
+    "reports/{reportId}": { "description": "Analytics reports" },
+    "vendor_profiles/{vendorId}": { "description": "Extended vendor store profile" },
+    "vendor_themes/{vendorId}": { "description": "Vendor store styling themes" },
+    "vendor_settings/{vendorId}": { "description": "Vendor policies and payout settings" },
+    "vendor_statistics/{vendorId}": { "description": "Vendor business metrics" },
+    "vendor_orders/{vOrderId}": { "description": "Vendor partitioned orders" },
+    "vendor_wallet/{vendorId}": { "description": "Vendor financial wallet" },
+    "vendor_notifications/{notificationId}": { "description": "Vendor alerts and notifications" },
+    "vendor_reviews/{reviewId}": { "description": "Reviews left on vendor store" },
+    "vendor_applications/{applicationId}": { "description": "Vendor store registration applications" },
+    "verified_seller_requests/{requestId}": { "description": "Verified seller badge requests" },
+    "inventory_logs/{logId}": { "description": "Inventory stock adjustment history" },
+    "reseller_applications/{applicationId}": { "description": "Reseller program applications" },
+    "reseller_wallet/{resellerId}": {
+      "schema": { "$ref": "#/entities/ResellerWallet" },
+      "description": "Reseller financial wallet balance and profit tracking"
+    },
+    "reseller_wallet_transactions/{transactionId}": {
+      "schema": { "$ref": "#/entities/ResellerWalletTransaction" },
+      "description": "Reseller atomic ledger transactions"
+    },
+    "reseller_products/{docId}": {
+      "schema": { "$ref": "#/entities/ResellerProduct" },
+      "description": "Reseller custom product pricing and profit records"
+    },
+    "reseller_orders/{roId}": {
+      "schema": { "$ref": "#/entities/ResellerOrder" },
+      "description": "Reseller customer orders, price snapshots, and pending profit records"
+    },
+    "reseller_transactions/{transactionId}": { "description": "Legacy reseller commissions and payouts ledger" },
+    "commission_rules/{ruleId}": { "description": "Reseller and vendor commission tier rules" },
+    "bonus_rules/{ruleId}": { "description": "Performance and leadership bonus rules" },
+    "bonus_transactions/{txId}": { "description": "Recorded bonus transactions" },
+    "commission_transactions/{txId}": { "description": "Recorded commission transactions" },
+    "user_referral_transactions/{txId}": { "description": "User referral reward transactions" },
+    "mlm_members/{memberId}": { "description": "Multi-tier leadership and team matrix" },
+    "referral_codes/{codeId}": { "description": "Active reseller and user referral codes" },
+    "referral_tracking/{trackingId}": { "description": "Referral click and conversion tracking" },
+    "promo_codes/{codeId}": { "description": "Promotional discount codes for reseller shops" },
+    "order_items/{itemId}": { "description": "Order line item details" },
+    "order_status_logs/{logId}": { "description": "Fulfillment status transitions history" },
+    "orderNotes/{noteId}": { "description": "Internal notes on orders" },
+    "storage_accounts/{accountId}": { "description": "Connected Google Drive / cloud storage accounts" },
+    "storage_files/{fileId}": { "description": "Uploaded storage assets registry" },
+    "disputes/{disputeId}": { "description": "Customer order dispute tickets" },
+    "payments/{paymentId}": {
+      "schema": { "$ref": "#/entities/PaymentVerification" },
+      "description": "Secure payment verification records for manual and SMS-assisted payment processing"
+    }
+  }
+}

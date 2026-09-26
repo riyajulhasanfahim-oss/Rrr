@@ -1,0 +1,48 @@
+{
+  "rules": {
+    ".read": "auth != null",
+    ".write": "auth != null",
+    "reseller_wallet": {
+      "$resellerId": {
+        ".read": "auth != null && (auth.uid === $resellerId || root.child('users/' + auth.uid + '/role').val() === 'admin')",
+        ".write": "auth != null && root.child('users/' + auth.uid + '/role').val() === 'admin'"
+      }
+    },
+    "vendor_wallet": {
+      "$vendorId": {
+        ".read": "auth != null && (auth.uid === $vendorId || root.child('users/' + auth.uid + '/role').val() === 'admin')",
+        ".write": "auth != null && root.child('users/' + auth.uid + '/role').val() === 'admin'"
+      }
+    },
+    "reseller_orders": {
+      ".indexOn": ["resellerId", "vendorId", "orderId", "profitStatus", "orderStatus", "createdAt"]
+    },
+    "reseller_profit_locks": {
+      ".indexOn": ["orderId", "vendorId", "resellerId", "status", "createdAt"]
+    },
+    "reseller_profit_releases": {
+      ".indexOn": ["orderId", "resellerId", "vendorId", "createdAt"]
+    },
+    "reseller_profit_reviews": {
+      ".indexOn": ["orderId", "resellerId", "reviewStatus", "submittedAt"]
+    },
+    "reseller_return_requests": {
+      ".indexOn": ["orderId", "vendorId", "returnStatus", "createdAt"]
+    },
+    "reseller_profit_reversals": {
+      ".indexOn": ["orderId", "resellerId", "vendorId", "status", "createdAt"]
+    },
+    "reseller_financial_idempotency": {
+      ".indexOn": ["orderId", "transactionType", "createdAt"]
+    },
+    "order_status_logs": {
+      ".indexOn": ["orderId", "timestamp"]
+    },
+    "courier_link_reviews": {
+      "$orderId": {
+        ".validate": "!root.child('reseller_orders/' + $orderId).exists() || root.child('reseller_orders/' + $orderId + '/profitStatus').val() === 'LOCKED' || root.child('reseller_orders/' + $orderId + '/profitStatus').val() === 'RELEASED'"
+      },
+      ".indexOn": ["orderId", "vendorId", "status", "submittedAt"]
+    }
+  }
+}

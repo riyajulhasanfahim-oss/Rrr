@@ -1,0 +1,12 @@
+{
+  "name": "Remix Bobissot 1",
+  "description": "RJ WORLD BD E-commerce website ",
+  "requestFramePermissions": [
+    "microphone",
+    "camera",
+    "geolocation"
+  ],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

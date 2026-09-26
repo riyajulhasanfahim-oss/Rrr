@@ -1,0 +1,476 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>RJ WORLD BD - E-commerce & Reseller Marketplace</title>
+    <meta name="description" content="RJ WORLD BD - Premier E-Commerce, Reselling & Multi-Vendor Marketplace in Bangladesh" />
+    <meta name="theme-color" content="#030814" />
+    <meta name="application-name" content="RJ World" />
+    <meta name="apple-mobile-web-app-title" content="RJ World" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+
+    <!-- Canonical URL -->
+    <link rel="canonical" href="https://rjworldbd.com/" />
+
+    <!-- Early Multi-Vendor Wildcard Subdomain Detection -->
+    <script data-cfasync="false">
+      (function() {
+        try {
+          var host = (window.location.hostname || '').toLowerCase().split(':')[0];
+          var searchParams = new URLSearchParams(window.location.search);
+          var testSub = searchParams.get('test_shop_domain') || searchParams.get('subdomain');
+          if (testSub) {
+            window.__RJ_VENDOR_SUBDOMAIN__ = testSub.toLowerCase().trim().replace('.rjworldbd.com', '').replace('.rjworld.com', '');
+          } else if (host.endsWith('.rjworldbd.com') && host !== 'rjworldbd.com' && host !== 'www.rjworldbd.com') {
+            var sub = host.replace('.rjworldbd.com', '').trim();
+            var reserved = ['www', 'admin', 'api', 'mail', 'cpanel', 'webmail', 'ftp', 'app', 'auth', 'support'];
+            if (reserved.indexOf(sub) === -1) {
+              window.__RJ_VENDOR_SUBDOMAIN__ = sub;
+            }
+          }
+        } catch(e) {}
+      })();
+    </script>
+
+    <!-- Search Engine Crawlers -->
+    <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
+    <meta name="googlebot" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
+    <meta name="googlebot-image" content="index, follow" />
+    <meta name="google-site-verification" content="rjworldbd-google-search-console-verification" />
+
+    <!-- Google Search Result Favicon (Square PNG, 48x48 & multiples of 48px as required by Google Search) -->
+    <link rel="icon" type="image/png" sizes="48x48" href="https://rjworldbd.com/favicon-48x48.png" />
+    <link rel="icon" type="image/png" sizes="96x96" href="https://rjworldbd.com/favicon-96x96.png" />
+    <link rel="icon" type="image/png" sizes="192x192" href="https://rjworldbd.com/favicon-192x192.png" />
+    <link rel="shortcut icon" type="image/png" href="https://rjworldbd.com/favicon-48x48.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="https://rjworldbd.com/apple-touch-icon.png" />
+    <link rel="manifest" href="/manifest.json" />
+
+    <!-- Open Graph / Search Engine & Social Identity -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://rjworldbd.com/" />
+    <meta property="og:site_name" content="RJ World" />
+    <meta property="og:title" content="RJ WORLD BD - E-commerce & Reseller Marketplace" />
+    <meta property="og:description" content="RJ WORLD BD - Premier E-Commerce, Reselling & Multi-Vendor Marketplace in Bangladesh" />
+    <meta property="og:image" content="https://rjworldbd.com/og-image.png" />
+    <meta property="og:image:width" content="512" />
+    <meta property="og:image:height" content="512" />
+    <meta property="og:image:alt" content="RJ World Logo" />
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content="RJ WORLD BD - E-commerce & Reseller Marketplace" />
+    <meta name="twitter:description" content="RJ WORLD BD - Premier E-Commerce, Reselling & Multi-Vendor Marketplace in Bangladesh" />
+    <meta name="twitter:image" content="https://rjworldbd.com/og-image.png" />
+
+    <!-- Google Search Structured Data (JSON-LD) for Site Name, Logo & Search Snippets -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "WebSite",
+          "@id": "https://rjworldbd.com/#website",
+          "url": "https://rjworldbd.com/",
+          "name": "RJ WORLD BD",
+          "alternateName": [
+            "RJ World",
+            "RJ World BD",
+            "rjworldbd.com"
+          ],
+          "description": "RJ WORLD BD - Premier E-Commerce, Reselling & Multi-Vendor Marketplace in Bangladesh",
+          "publisher": {
+            "@id": "https://rjworldbd.com/#organization"
+          },
+          "inLanguage": "en"
+        },
+        {
+          "@type": "Organization",
+          "@id": "https://rjworldbd.com/#organization",
+          "name": "RJ WORLD BD",
+          "alternateName": "RJ World",
+          "url": "https://rjworldbd.com/",
+          "logo": {
+            "@type": "ImageObject",
+            "@id": "https://rjworldbd.com/#logo",
+            "url": "https://rjworldbd.com/rj-world-logo.png",
+            "contentUrl": "https://rjworldbd.com/rj-world-logo.png",
+            "caption": "RJ World Logo",
+            "width": 800,
+            "height": 800
+          },
+          "image": "https://rjworldbd.com/rj-world-logo.png",
+          "description": "RJ WORLD BD - Premier E-Commerce, Reselling & Multi-Vendor Marketplace in Bangladesh"
+        }
+      ]
+    }
+    </script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@0,500;0,700;1,600&family=Poppins:wght@400;500;600;700&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <script data-cfasync="false">
+      window.addEventListener('error', function(e) {
+        if (e.message === 'Script error.') {
+          e.preventDefault();
+          e.stopImmediatePropagation();
+          console.warn('Ignored cross-origin script error');
+          return true;
+        }
+      }, true);
+      window.onerror = function(msg) {
+        if (msg === 'Script error.') return true;
+      };
+    </script>
+  </head>
+  <body style="background-color: #030814; margin: 0; padding: 0; overflow-x: hidden;">
+    <div id="root"></div>
+
+    <!-- RJ WORLD BD Premium Blue Hardware-Accelerated Opening Animation -->
+    <div id="rj-splash-screen" class="rj-splash-container">
+      <!-- Background Ambient Blue Aura & Grid -->
+      <div class="rj-splash-bg-grid"></div>
+      <div class="rj-splash-blue-aura"></div>
+      <div class="rj-splash-blue-core"></div>
+
+      <!-- Floating Blue Light Particles -->
+      <div class="rj-splash-particles">
+        <span class="rj-p" style="top:22%; left:16%; width:4px; height:4px; animation-delay:0s; animation-duration:4s;"></span>
+        <span class="rj-p" style="top:32%; left:84%; width:3px; height:3px; animation-delay:1.2s; animation-duration:4.8s;"></span>
+        <span class="rj-p" style="top:68%; left:18%; width:5px; height:5px; animation-delay:2s; animation-duration:4.2s;"></span>
+        <span class="rj-p" style="top:72%; left:82%; width:4px; height:4px; animation-delay:0.6s; animation-duration:3.6s;"></span>
+        <span class="rj-p" style="top:18%; left:72%; width:3px; height:3px; animation-delay:1.8s; animation-duration:5s;"></span>
+        <span class="rj-p" style="top:78%; left:52%; width:4px; height:4px; animation-delay:2.4s; animation-duration:4.4s;"></span>
+      </div>
+
+      <!-- Center Logo & Branding Presentation -->
+      <div class="rj-splash-content">
+        <!-- Expanding Radiant Blue Pulse Rings -->
+        <div class="rj-ring rj-ring-1"></div>
+        <div class="rj-ring rj-ring-2"></div>
+        <div class="rj-ring rj-ring-3"></div>
+
+        <!-- Pure RJ WORLD BD Globe Presentation with Radiant Blue Light Aura (Zero square/rectangle background) -->
+        <div class="rj-logo-pure-wrap">
+          <div class="rj-logo-blue-glow"></div>
+          <div class="rj-shimmer-sweep"></div>
+          <img
+            src="/rj-world-logo.png"
+            alt="RJ WORLD BD"
+            class="rj-logo-pure-img"
+            draggable="false"
+          />
+        </div>
+
+        <!-- Brand Name & Description with Glowing Blue Gradient -->
+        <div class="rj-brand-info">
+          <div class="rj-title">RJ WORLD BD</div>
+          <div class="rj-subtitle">E-Commerce & Reseller Marketplace</div>
+        </div>
+
+        <!-- Rhythmic Luminous Blue Pulse Indicators -->
+        <div class="rj-indicators">
+          <span class="rj-dot rj-dot-1"></span>
+          <span class="rj-dot rj-dot-2"></span>
+          <span class="rj-dot rj-dot-3"></span>
+        </div>
+      </div>
+
+      <!-- Subtle Footer Tagline -->
+      <div class="rj-splash-footer">
+        EMPOWERING DIGITAL COMMERCE
+      </div>
+    </div>
+
+    <!-- Splash Screen Styles & Smooth Dismissal Script -->
+    <style>
+      .rj-splash-container {
+        position: fixed;
+        inset: 0;
+        z-index: 999999;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        user-select: none;
+        overflow: hidden;
+        cursor: pointer;
+        background: radial-gradient(ellipse at 50% 45%, #0d224a 0%, #061226 50%, #030814 100%);
+        transition: opacity 0.55s cubic-bezier(0.4, 0, 0.2, 1), transform 0.55s cubic-bezier(0.4, 0, 0.2, 1);
+        will-change: opacity, transform;
+        transform: scale(1);
+        opacity: 1;
+      }
+      .rj-splash-bg-grid {
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        opacity: 0.04;
+        background-image: radial-gradient(rgba(56, 189, 248, 0.7) 1px, transparent 1px);
+        background-size: 24px 24px;
+      }
+      .rj-splash-blue-aura {
+        position: absolute;
+        top: 45%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 440px;
+        height: 440px;
+        border-radius: 50%;
+        background: radial-gradient(circle, rgba(14, 165, 233, 0.25) 0%, rgba(37, 99, 235, 0.18) 40%, transparent 70%);
+        filter: blur(60px);
+        pointer-events: none;
+        animation: rjPulseAura 4s ease-in-out infinite alternate;
+      }
+      .rj-splash-blue-core {
+        position: absolute;
+        top: 45%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 220px;
+        height: 220px;
+        border-radius: 50%;
+        background: radial-gradient(circle, rgba(56, 189, 248, 0.35) 0%, rgba(29, 78, 216, 0.2) 50%, transparent 80%);
+        filter: blur(35px);
+        pointer-events: none;
+      }
+      .rj-splash-particles {
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+      }
+      .rj-p {
+        position: absolute;
+        border-radius: 50%;
+        background-color: #7dd3fc;
+        box-shadow: 0 0 8px rgba(56, 189, 248, 0.9);
+        animation: rjFloatParticle ease-in-out infinite alternate;
+      }
+      .rj-splash-content {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 0 16px;
+        z-index: 2;
+      }
+      .rj-ring {
+        position: absolute;
+        top: 70px;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        border-radius: 50%;
+        pointer-events: none;
+      }
+      .rj-ring-1 {
+        width: 170px;
+        height: 170px;
+        border: 1.5px solid rgba(56, 189, 248, 0.45);
+        box-shadow: 0 0 24px rgba(56, 189, 248, 0.25);
+        animation: rjRingPulse 2.8s cubic-bezier(0.1, 0, 0.2, 1) infinite;
+      }
+      .rj-ring-2 {
+        width: 220px;
+        height: 220px;
+        border: 1px solid rgba(37, 99, 235, 0.35);
+        box-shadow: 0 0 35px rgba(37, 99, 235, 0.2);
+        animation: rjRingPulse 2.8s cubic-bezier(0.1, 0, 0.2, 1) 0.5s infinite;
+      }
+      .rj-ring-3 {
+        width: 280px;
+        height: 280px;
+        border: 1px dashed rgba(125, 211, 252, 0.2);
+        animation: rjRingRotate 20s linear infinite;
+      }
+      .rj-logo-pure-wrap {
+        position: relative;
+        width: 140px;
+        height: 140px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: transparent !important;
+      }
+      .rj-logo-blue-glow {
+        position: absolute;
+        inset: 4px;
+        border-radius: 50%;
+        background: radial-gradient(circle, rgba(56, 189, 248, 0.5) 0%, rgba(37, 99, 235, 0.3) 50%, transparent 75%);
+        filter: blur(18px);
+        opacity: 0.9;
+        pointer-events: none;
+        animation: rjLogoGlow 2.5s ease-in-out infinite alternate;
+      }
+      .rj-shimmer-sweep {
+        position: absolute;
+        inset: 0;
+        border-radius: 50%;
+        pointer-events: none;
+        background: linear-gradient(135deg, transparent 20%, rgba(255, 255, 255, 0.28) 50%, transparent 80%);
+        opacity: 0;
+        animation: rjPureShimmer 2.4s infinite cubic-bezier(0.4, 0, 0.2, 1);
+      }
+      .rj-logo-pure-img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        background: transparent !important;
+        filter: drop-shadow(0 10px 25px rgba(0, 0, 0, 0.6)) drop-shadow(0 0 20px rgba(56, 189, 248, 0.55));
+        animation: rjLogoReveal 1.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+      }
+      .rj-brand-info {
+        margin-top: 24px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        animation: rjFadeUp 0.9s cubic-bezier(0.16, 1, 0.3, 1) 0.2s forwards;
+        opacity: 0;
+      }
+      .rj-title {
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        font-size: 24px;
+        font-weight: 800;
+        letter-spacing: 1.5px;
+        background: linear-gradient(180deg, #FFFFFF 20%, #BAE6FD 65%, #60A5FA 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        text-shadow: 0 0 25px rgba(56, 189, 248, 0.4);
+      }
+      .rj-subtitle {
+        margin-top: 5px;
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        font-size: 13px;
+        font-weight: 500;
+        letter-spacing: 0.5px;
+        color: #7dd3fc;
+        opacity: 0.85;
+      }
+      .rj-indicators {
+        margin-top: 24px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .rj-dot {
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        animation: rjDotPulse 1.2s ease-in-out infinite;
+      }
+      .rj-dot-1 { background-color: #38bdf8; box-shadow: 0 0 8px #38bdf8; animation-delay: 0s; }
+      .rj-dot-2 { background-color: #2563eb; box-shadow: 0 0 8px #2563eb; animation-delay: 0.2s; }
+      .rj-dot-3 { background-color: #60a5fa; box-shadow: 0 0 8px #60a5fa; animation-delay: 0.4s; }
+      .rj-splash-footer {
+        position: absolute;
+        bottom: 24px;
+        font-family: 'Inter', sans-serif;
+        font-size: 10px;
+        font-weight: 600;
+        letter-spacing: 2px;
+        color: rgba(148, 163, 184, 0.6);
+        text-transform: uppercase;
+      }
+
+      @keyframes rjLogoReveal {
+        0% { transform: scale(0.85); opacity: 0; }
+        45% { transform: scale(1.06); opacity: 1; }
+        70% { transform: scale(0.98); }
+        100% { transform: scale(1); opacity: 1; }
+      }
+      @keyframes rjFadeUp {
+        0% { transform: translateY(12px); opacity: 0; }
+        100% { transform: translateY(0); opacity: 1; }
+      }
+      @keyframes rjLogoGlow {
+        0% { opacity: 0.6; transform: scale(0.95); }
+        100% { opacity: 1; transform: scale(1.08); }
+      }
+      @keyframes rjPureShimmer {
+        0% { opacity: 0; transform: rotate(0deg) scale(0.85); }
+        30% { opacity: 0.8; }
+        60% { opacity: 0.3; }
+        100% { opacity: 0; transform: rotate(180deg) scale(1.15); }
+      }
+      @keyframes rjPulseAura {
+        0% { transform: translate(-50%, -50%) scale(0.92); opacity: 0.7; }
+        100% { transform: translate(-50%, -50%) scale(1.12); opacity: 1; }
+      }
+      @keyframes rjRingPulse {
+        0% { transform: translate(-50%, -50%) scale(0.95); opacity: 0.6; }
+        70% { transform: translate(-50%, -50%) scale(1.22); opacity: 0; }
+        100% { transform: translate(-50%, -50%) scale(1.22); opacity: 0; }
+      }
+      @keyframes rjRingRotate {
+        0% { transform: translate(-50%, -50%) rotate(0deg); }
+        100% { transform: translate(-50%, -50%) rotate(360deg); }
+      }
+      @keyframes rjShimmer {
+        0% { transform: translateX(-150%) skewX(-15deg); }
+        45%, 100% { transform: translateX(200%) skewX(-15deg); }
+      }
+      @keyframes rjFloatParticle {
+        0% { transform: translateY(0) scale(0.8); opacity: 0.2; }
+        50% { transform: translateY(-14px) scale(1.2); opacity: 0.9; }
+        100% { transform: translateY(-28px) scale(0.8); opacity: 0.2; }
+      }
+      @keyframes rjDotPulse {
+        0%, 100% { transform: scale(0.8); opacity: 0.4; }
+        50% { transform: scale(1.2); opacity: 1; }
+      }
+    </style>
+
+    <script data-cfasync="false">
+      (function() {
+        let dismissed = false;
+        let minTimePassed = false;
+        let appReady = false;
+
+        function dismiss() {
+          if (dismissed) return;
+          dismissed = true;
+          const splash = document.getElementById('rj-splash-screen');
+          if (!splash) return;
+          splash.style.opacity = '0';
+          splash.style.transform = 'scale(1.03)';
+          splash.style.pointerEvents = 'none';
+          setTimeout(function() {
+            if (splash.parentNode) splash.parentNode.removeChild(splash);
+          }, 600);
+        }
+
+        window.dismissSplashScreen = dismiss;
+        window.markAppReady = function() {
+          appReady = true;
+          if (minTimePassed) {
+            dismiss();
+          }
+        };
+
+        // Minimum display duration: exactly 3.0 seconds (3000ms) per user specification
+        setTimeout(function() {
+          minTimePassed = true;
+          if (appReady) {
+            dismiss();
+          }
+        }, 3000);
+
+        // Fallback safety timeout (4000ms)
+        setTimeout(dismiss, 4000);
+
+        // Instant tap to skip
+        const splashEl = document.getElementById('rj-splash-screen');
+        if (splashEl) {
+          splashEl.addEventListener('click', function() {
+            dismiss();
+          }, { once: true });
+        }
+      })();
+    </script>
+    <script type="module" data-cfasync="false" src="/src/main.tsx"></script>
+  </body>
+</html>
+

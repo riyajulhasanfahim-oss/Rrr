@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">RJ World BD</string>
+    <string name="notification_channel_name">RJ World BD Payment Service</string>
+    <string name="notification_channel_desc">Background monitoring for bKash, Nagad, Rocket and Upay payment SMS</string>
+    <string name="service_title">RJ World BD Payment Service</string>
+    <string name="service_running">Payment SMS Monitoring Active</string>
+</resources>

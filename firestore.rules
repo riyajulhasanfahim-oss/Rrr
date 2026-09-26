@@ -1,0 +1,522 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isUserAdmin() {
+      return isSignedIn() && (
+        request.auth.token.email in ['frofficialbd1@gmail.com', 'riyajulhasanfahim@gmail.com'] ||
+        (exists(/databases/$(database)/documents/users/$(request.auth.uid)) && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'Admin')
+      );
+    }
+
+    function isUserVendor() {
+      return isSignedIn() && exists(/databases/$(database)/documents/users/$(request.auth.uid)) && (
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'Vendor' ||
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'vendor' ||
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.hasActiveVendor == true
+      );
+    }
+
+    function isUserReseller() {
+      return isSignedIn() && exists(/databases/$(database)/documents/users/$(request.auth.uid)) && (
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'Reseller' ||
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'reseller' ||
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.accountType == 'reseller' ||
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.hasActiveReseller == true
+      );
+    }
+
+    // User profiles
+    match /users/{userId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn() && request.auth.uid == userId;
+      allow update: if isUserAdmin() || (isSignedIn() && request.auth.uid == userId);
+      allow delete: if isUserAdmin();
+    }
+
+    // User carts & wishlists
+    match /carts/{userId} {
+      allow read, write: if isSignedIn() && request.auth.uid == userId;
+    }
+
+    match /wishlists/{userId} {
+      allow read, write: if isSignedIn() && request.auth.uid == userId;
+    }
+
+    // Main Orders Collection
+    match /orders/{orderId} {
+      allow read: if isUserAdmin() || 
+        (isSignedIn() && (
+          resource.data.userId == request.auth.uid || 
+          resource.data.customerId == request.auth.uid || 
+          resource.data.vendorId == request.auth.uid ||
+          (resource.data.vendorIds != null && resource.data.vendorIds.hasAny([request.auth.uid]))
+        )) || 
+        resource.data.userId == 'guest' || 
+        resource.data.customerId == 'guest';
+
+      allow create: if true;
+
+      allow update: if isUserAdmin() || 
+        (isSignedIn() && (
+          resource.data.userId == request.auth.uid || 
+          resource.data.customerId == request.auth.uid || 
+          resource.data.vendorId == request.auth.uid ||
+          (resource.data.vendorIds != null && resource.data.vendorIds.hasAny([request.auth.uid]))
+        ));
+
+      allow delete: if isUserAdmin();
+    }
+
+    // Vendor-specific order partition
+    match /vendor_orders/{vOrderId} {
+      allow read: if isUserAdmin() || 
+        (isSignedIn() && (
+          resource.data.vendorId == request.auth.uid || 
+          resource.data.customerId == request.auth.uid
+        ));
+
+      allow create: if true;
+
+      allow update: if isUserAdmin() || (isSignedIn() && resource.data.vendorId == request.auth.uid);
+      allow delete: if isUserAdmin();
+    }
+
+    // Vendor wallets and transactions
+    match /vendor_wallet/{vendorId} {
+      allow read: if isUserAdmin() || (isSignedIn() && request.auth.uid == vendorId);
+      allow create: if isUserAdmin() || (isUserVendor() && request.auth.uid == vendorId);
+      // Vendor cannot modify protected locked balance or reseller profit reserve
+      allow update: if isUserAdmin() || (
+        isUserVendor() && 
+        request.auth.uid == vendorId &&
+        (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['lockedBalance', 'resellerProfitReserve']))
+      );
+      allow delete: if isUserAdmin();
+    }
+
+    match /wallet_transactions/{transactionId} {
+      allow read: if isUserAdmin() || (isSignedIn() && resource.data.vendorId == request.auth.uid);
+      allow write, create: if isUserAdmin() || isSignedIn();
+    }
+
+    // Disputes collection
+    match /disputes/{disputeId} {
+      allow read: if isUserAdmin() || 
+        (isSignedIn() && (
+          resource.data.customerId == request.auth.uid || 
+          resource.data.vendorId == request.auth.uid ||
+          resource.data.userId == request.auth.uid
+        ));
+      allow create: if isSignedIn();
+      allow update: if isUserAdmin() || 
+        (isSignedIn() && (
+          resource.data.customerId == request.auth.uid || 
+          resource.data.vendorId == request.auth.uid
+        ));
+      allow delete: if isUserAdmin();
+    }
+
+    // Vendor applications & stores
+    match /vendor_applications/{applicationId} {
+      allow read: if isSignedIn() && (request.auth.uid == resource.data.userId || isUserAdmin());
+      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
+      allow update: if isSignedIn() && (request.auth.uid == resource.data.userId || isUserAdmin());
+    }
+
+    match /vendors/{vendorId} {
+      allow read: if true;
+      allow write: if isUserAdmin() || (isSignedIn() && request.auth.uid == vendorId);
+
+      match /store/{storeId} {
+        allow read: if true;
+        allow write: if isUserAdmin() || (isSignedIn() && request.auth.uid == vendorId);
+      }
+
+      match /{document=**} {
+        allow read: if true;
+        allow write: if isUserAdmin() || (isSignedIn() && request.auth.uid == vendorId);
+      }
+    }
+
+    match /vendor_profiles/{vendorId} {
+      allow read: if true;
+      allow write: if isUserAdmin() || (isSignedIn() && request.auth.uid == vendorId);
+
+      match /{document=**} {
+        allow read: if true;
+        allow write: if isUserAdmin() || (isSignedIn() && request.auth.uid == vendorId);
+      }
+    }
+
+    match /vendor_settings/{vendorId} {
+      allow read: if true;
+      allow write: if isUserAdmin() || (isSignedIn() && request.auth.uid == vendorId);
+    }
+
+    match /vendor_themes/{vendorId} {
+      allow read: if true;
+      allow write: if isUserAdmin() || (isSignedIn() && request.auth.uid == vendorId);
+    }
+
+    // Stores collection (Vendor and Reseller stores)
+    match /stores/{storeId} {
+      allow read: if true;
+      allow write: if isUserAdmin() || (isSignedIn() && request.auth.uid == storeId);
+    }
+
+    match /vendor_statistics/{vendorId} {
+      allow read: if isUserAdmin() || (isSignedIn() && request.auth.uid == vendorId);
+      allow write: if isUserAdmin() || (isSignedIn() && request.auth.uid == vendorId);
+    }
+
+    // Products & catalog (both Vendor and Reseller can add their products)
+    match /products/{productId} {
+      allow read: if true;
+      allow create: if isUserAdmin() || (isSignedIn() && (request.resource.data.vendorId == request.auth.uid || request.resource.data.resellerId == request.auth.uid));
+      allow update, delete: if isUserAdmin() || (isSignedIn() && (resource.data.vendorId == request.auth.uid || resource.data.resellerId == request.auth.uid));
+    }
+
+    match /categories/{categoryId} {
+      allow read: if true;
+      allow write: if isUserAdmin();
+    }
+
+    match /product_categories/{categoryId} {
+      allow read: if true;
+      allow write: if isUserAdmin();
+    }
+
+    match /brands/{brandId} {
+      allow read: if true;
+      allow write: if isUserAdmin();
+    }
+
+    match /banners/{bannerId} {
+      allow read: if true;
+      allow write: if isUserAdmin();
+    }
+
+    match /coupons/{couponId} {
+      allow read: if true;
+      allow write: if isUserAdmin();
+    }
+
+    match /reviews/{reviewId} {
+      allow read: if true;
+      allow create: if isSignedIn();
+      allow update, delete: if isUserAdmin() || (isSignedIn() && resource.data.userId == request.auth.uid);
+    }
+
+    match /vendor_reviews/{reviewId} {
+      allow read: if true;
+      allow create: if isSignedIn();
+      allow update, delete: if isUserAdmin();
+    }
+
+    // Notifications
+    match /notifications/{notificationId} {
+      allow read: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow write: if isSignedIn();
+    }
+
+    match /vendor_notifications/{notificationId} {
+      allow read: if isSignedIn() && (resource.data.userId == request.auth.uid || resource.data.vendorId == request.auth.uid);
+      allow write: if isSignedIn();
+    }
+
+    // Reseller and MLM ecosystem
+    match /reseller_applications/{applicationId} {
+      allow read: if isSignedIn() && (request.auth.uid == resource.data.userId || isUserAdmin());
+      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
+      allow update: if isSignedIn() && (request.auth.uid == resource.data.userId || isUserAdmin());
+    }
+
+    match /resellers/{resellerId} {
+      allow read: if true;
+      allow create: if isSignedIn() && request.auth.uid == resellerId;
+      allow update, delete: if isUserAdmin() || (isSignedIn() && request.auth.uid == resellerId);
+    }
+
+    // Reseller Wallet Structure
+    match /reseller_wallet/{resellerId} {
+      // 1. Reseller can ONLY view their own wallet
+      // 2. Reseller CANNOT see other Resellers' wallets
+      // 6. Regular user accounts (not reseller, not admin) cannot read or access this wallet
+      allow read: if isUserAdmin() || (isUserReseller() && request.auth.uid == resellerId);
+      
+      // Reseller can only initialize their wallet if all balance & profit fields start at 0
+      allow create: if isUserAdmin() || (
+        isUserReseller() && 
+        request.auth.uid == resellerId &&
+        (request.resource.data.availableBalance == 0 || !('availableBalance' in request.resource.data)) &&
+        (request.resource.data.lockedBalance == 0 || !('lockedBalance' in request.resource.data)) &&
+        (request.resource.data.totalBalance == 0 || !('totalBalance' in request.resource.data)) &&
+        (request.resource.data.pendingProfit == 0 || !('pendingProfit' in request.resource.data)) &&
+        (request.resource.data.releasedProfit == 0 || !('releasedProfit' in request.resource.data)) &&
+        (request.resource.data.cancelledProfit == 0 || !('cancelledProfit' in request.resource.data))
+      );
+      
+      // 3. Reseller CANNOT directly edit their balance, lockedBalance, or profit
+      // 5. Only authorized backend/admin logic can update balances
+      allow update: if isUserAdmin();
+      allow delete: if isUserAdmin();
+    }
+
+    // Reseller Wallet Transaction Ledger
+    match /reseller_wallet_transactions/{transactionId} {
+      // Reseller can only read their own ledger transactions
+      allow read: if isUserAdmin() || (isUserReseller() && resource.data.resellerId == request.auth.uid);
+      // Only authorized backend/admin logic can write to the ledger
+      allow create, update, delete: if isUserAdmin();
+    }
+
+    // Reseller Custom Products & Selling Price System
+    match /reseller_products/{docId} {
+      // 1. Reseller can ONLY view their own reseller product pricing
+      // 4. Regular users cannot access or view
+      allow read: if isUserAdmin() || (isUserReseller() && resource.data.resellerId == request.auth.uid);
+
+      // Create: Reseller can configure their own product price
+      // Selling price cannot be lower than vendor price
+      allow create: if isUserAdmin() || (
+        isUserReseller() && 
+        request.auth.uid == request.resource.data.resellerId &&
+        request.resource.data.resellerSellingPrice >= request.resource.data.vendorPrice &&
+        request.resource.data.resellerProfit == (request.resource.data.resellerSellingPrice - request.resource.data.vendorPrice)
+      );
+
+      // Update:
+      // 1. Reseller can only update their own resellerSellingPrice
+      // 2. Reseller cannot change vendorPrice
+      // 3. Reseller cannot forge resellerProfit (must strictly equal resellerSellingPrice - vendorPrice)
+      // 4. Reseller selling price cannot be lower than vendor price
+      allow update: if isUserAdmin() || (
+        isUserReseller() && 
+        request.auth.uid == resource.data.resellerId &&
+        request.auth.uid == request.resource.data.resellerId &&
+        request.resource.data.vendorPrice == resource.data.vendorPrice &&
+        request.resource.data.resellerSellingPrice >= resource.data.vendorPrice &&
+        request.resource.data.resellerProfit == (request.resource.data.resellerSellingPrice - resource.data.vendorPrice)
+      );
+
+      allow delete: if isUserAdmin() || (isUserReseller() && resource.data.resellerId == request.auth.uid);
+    }
+
+    match /wallets/{walletId} {
+      allow read, write: if isUserAdmin() || (isSignedIn() && request.auth.uid == walletId);
+    }
+
+    match /user_wallet/{walletId} {
+      allow read, write: if isUserAdmin() || (isSignedIn() && request.auth.uid == walletId);
+    }
+
+    // Reseller orders partition - strict reseller isolation and immutability of prices & profits
+    match /reseller_orders/{roId} {
+      // 1. Admin can read all
+      // 2. Reseller can ONLY read their own orders
+      // 3. Associated Vendor can read their product's reseller orders
+      // 4. Regular users CANNOT read reseller orders
+      allow read: if isUserAdmin() || (
+        isSignedIn() && (
+          resource.data.resellerId == request.auth.uid || 
+          resource.data.vendorId == request.auth.uid
+        )
+      );
+
+      // Create: Authenticated reseller creating order with profitStatus = PENDING
+      allow create: if isUserAdmin() || (
+        isSignedIn() && 
+        request.resource.data.profitStatus == 'PENDING' &&
+        (
+          request.resource.data.resellerId == request.auth.uid ||
+          isUserReseller()
+        )
+      );
+
+      // Update: Reseller & Vendor cannot tamper with vendorPrice, resellerSellingPrice, quantity, or resellerProfit!
+      allow update: if isUserAdmin() || (
+        isSignedIn() && (
+          resource.data.resellerId == request.auth.uid ||
+          resource.data.vendorId == request.auth.uid
+        ) &&
+        request.resource.data.vendorPrice == resource.data.vendorPrice &&
+        request.resource.data.resellerSellingPrice == resource.data.resellerSellingPrice &&
+        request.resource.data.resellerProfit == resource.data.resellerProfit &&
+        request.resource.data.resellerId == resource.data.resellerId &&
+        request.resource.data.quantity == resource.data.quantity
+      );
+
+      allow delete: if isUserAdmin();
+    }
+
+    match /withdrawals/{withdrawalId} {
+      allow read: if isUserAdmin() || (isSignedIn() && resource.data.userId == request.auth.uid);
+      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
+      allow update, delete: if isUserAdmin();
+    }
+
+    match /withdraw_requests/{withdrawId} {
+      allow read: if isUserAdmin() || (isSignedIn() && (resource.data.vendorId == request.auth.uid || resource.data.userId == request.auth.uid));
+      allow create: if isSignedIn();
+      allow update, delete: if isUserAdmin();
+    }
+
+    match /referral_tracking/{trackingId} {
+      allow read: if isUserAdmin() || (isSignedIn() && resource.data.resellerId == request.auth.uid);
+      allow create: if true;
+    }
+
+    match /resellerTracking/{docId} {
+      allow read, write: if isUserAdmin() || (isSignedIn() && (resource == null || resource.data.resellerId == request.auth.uid || request.resource.data.resellerId == request.auth.uid));
+    }
+
+    match /reseller_transactions/{transactionId} {
+      allow read: if isUserAdmin() || (isSignedIn() && resource.data.resellerId == request.auth.uid);
+      allow create, write: if isUserAdmin() || isSignedIn();
+    }
+
+    match /chats/{document=**} {
+      allow read, write: if isSignedIn();
+    }
+
+    // Payment Verification records (Real-time automated verification between SMS Reader and Website)
+    match /payments/{paymentId} {
+      allow read: if true;
+      allow create, update: if true;
+      allow delete: if isUserAdmin();
+    }
+
+    // Fallback for settings / system configs
+    match /system_settings/{settingId} {
+      allow read: if true;
+      allow write: if isUserAdmin();
+    }
+
+    // Platform settings (global, domain, vendor, reseller, payment)
+    match /settings/{settingId} {
+      allow read: if true;
+      allow write: if isUserAdmin();
+    }
+
+    // Delivery couriers
+    match /couriers/{courierId} {
+      allow read: if true;
+      allow write: if isUserAdmin();
+    }
+
+    // Leadership ranks
+    match /ranks/{rankId} {
+      allow read: if true;
+      allow write: if isUserAdmin();
+    }
+
+    // Commission rules
+    match /commission_rules/{ruleId} {
+      allow read: if true;
+      allow write: if isUserAdmin();
+    }
+
+    // Bonus rules
+    match /bonus_rules/{ruleId} {
+      allow read: if true;
+      allow write: if isUserAdmin();
+    }
+
+    // Bonus and commission transaction records
+    match /bonus_transactions/{txId} {
+      allow read: if isUserAdmin() || (isSignedIn() && resource.data.resellerId == request.auth.uid);
+      allow write: if isUserAdmin() || isSignedIn();
+    }
+
+    match /commission_transactions/{txId} {
+      allow read: if isUserAdmin() || (isSignedIn() && resource.data.resellerId == request.auth.uid);
+      allow write: if isUserAdmin() || isSignedIn();
+    }
+
+    match /user_referral_transactions/{txId} {
+      allow read: if isUserAdmin() || (isSignedIn() && resource.data.userId == request.auth.uid);
+      allow write: if isUserAdmin() || isSignedIn();
+    }
+
+    // MLM Network matrix
+    match /mlm_members/{memberId} {
+      allow read: if isSignedIn();
+      allow write: if isUserAdmin() || (isSignedIn() && (request.auth.uid == memberId || request.resource.data.userId == request.auth.uid));
+    }
+
+    // Referral codes
+    match /referral_codes/{codeId} {
+      allow read: if true;
+      allow write: if isUserAdmin() || isSignedIn();
+    }
+
+    // Promo codes for reseller shops
+    match /promo_codes/{codeId} {
+      allow read: if true;
+      allow write: if isUserAdmin() || (isSignedIn() && (resource.data.resellerId == request.auth.uid || request.resource.data.resellerId == request.auth.uid));
+    }
+
+    // Verified seller requests
+    match /verified_seller_requests/{requestId} {
+      allow read: if isUserAdmin() || (isSignedIn() && (resource.data.vendorId == request.auth.uid || resource.data.userId == request.auth.uid));
+      allow create: if isSignedIn();
+      allow update, delete: if isUserAdmin();
+    }
+
+    // Inventory logs
+    match /inventory_logs/{logId} {
+      allow read: if isUserAdmin() || (isSignedIn() && resource.data.vendorId == request.auth.uid);
+      allow write: if isUserAdmin() || (isSignedIn() && request.resource.data.vendorId == request.auth.uid);
+    }
+
+    // Order items, status logs, order notes
+    match /order_items/{itemId} {
+      allow read: if true;
+      allow write: if isUserAdmin() || isSignedIn();
+    }
+
+    match /orderItems/{itemId} {
+      allow read: if true;
+      allow write: if isUserAdmin() || isSignedIn();
+    }
+
+    match /order_status_logs/{logId} {
+      allow read: if true;
+      allow write: if isUserAdmin() || isSignedIn();
+    }
+
+    match /orderNotes/{noteId} {
+      allow read: if isUserAdmin() || (isSignedIn() && (resource.data.vendorId == request.auth.uid || resource.data.userId == request.auth.uid));
+      allow write: if isUserAdmin() || isSignedIn();
+    }
+
+    // Shipping addresses
+    match /shippingAddresses/{addressId} {
+      allow read, write: if isSignedIn() && (resource == null || resource.data.userId == request.auth.uid || request.resource.data.userId == request.auth.uid || isUserAdmin());
+    }
+
+    // Support tickets
+    match /supportTickets/{ticketId} {
+      allow read: if isUserAdmin() || (isSignedIn() && resource.data.userId == request.auth.uid);
+      allow create: if isSignedIn();
+      allow update: if isUserAdmin() || (isSignedIn() && resource.data.userId == request.auth.uid);
+      allow delete: if isUserAdmin();
+    }
+
+    // Cloud storage management
+    match /storage_accounts/{accountId} {
+      allow read, write: if isUserAdmin();
+    }
+
+    match /storage_files/{fileId} {
+      allow read: if true;
+      allow write: if isUserAdmin();
+    }
+  }
+}

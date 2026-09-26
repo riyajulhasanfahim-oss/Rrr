@@ -1,0 +1,364 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /{document=**} {
+      allow read, write: if true;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+    
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+    
+    function isUserAdmin() {
+      return isSignedIn() && exists(/databases/$(database)/documents/users/$(request.auth.uid)) && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'Admin';
+    }
+
+    function isUserVendor() {
+      return isSignedIn() && exists(/databases/$(database)/documents/users/$(request.auth.uid)) && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'Vendor';
+    }
+
+    function isUserReseller() {
+      return isSignedIn() && exists(/databases/$(database)/documents/users/$(request.auth.uid)) && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'Reseller';
+    }
+
+    function isValidUser(data) {
+      return data.keys().hasAll(['uid', 'name', 'email', 'role', 'createdAt']) &&
+        data.uid is string && data.uid.size() <= 128 && data.uid == request.auth.uid &&
+        data.name is string && data.name.size() <= 100 &&
+        data.email is string && data.email.size() <= 255 &&
+        (data.phone == null || (data.phone is string && data.phone.size() <= 20)) &&
+        (data.photo == null || (data.photo is string && data.photo.size() <= 1024)) &&
+        data.role is string && (data.role == 'Customer' || data.role == 'Admin' || data.role == 'Vendor' || data.role == 'Reseller') &&
+        (data.language == null || (data.language is string && data.language.size() <= 10)) &&
+        (data.wallet == null || data.wallet is number) &&
+        data.createdAt is number;
+    }
+
+    function isValidUserUpdate(data) {
+      return data.name is string && data.name.size() <= 100 &&
+        (data.phone == null || (data.phone is string && data.phone.size() <= 20)) &&
+        (data.photo == null || (data.photo is string && data.photo.size() <= 1024)) &&
+        (data.language == null || (data.language is string && data.language.size() <= 10));
+    }
+    
+    function isValidCart(data) {
+      return data.keys().hasAll(['userId', 'items', 'updatedAt']) &&
+        data.userId is string && data.userId.size() <= 128 && data.userId == request.auth.uid &&
+        data.items is list && data.items.size() <= 100 &&
+        data.updatedAt is number;
+    }
+    
+    function isValidWishlist(data) {
+      return data.keys().hasAll(['userId', 'items', 'updatedAt']) &&
+        data.userId is string && data.userId.size() <= 128 && data.userId == request.auth.uid &&
+        data.items is list && data.items.size() <= 100 &&
+        data.updatedAt is number;
+    }
+
+    function isValidOrder(data) {
+      return data.keys().hasAll(['orderId', 'userId', 'items', 'total', 'status', 'createdAt']) &&
+        data.orderId is string && data.orderId.size() <= 128 &&
+        data.userId is string && data.userId.size() <= 128 && (data.userId == 'guest' || (isSignedIn() && data.userId == request.auth.uid)) &&
+        data.items is list && data.items.size() <= 100 &&
+        data.total is number &&
+        data.status is string &&
+        data.createdAt is number;
+    }
+
+    match /chats/{document=**} {
+      allow read, write: if isSignedIn();
+    }
+
+    match /users/{userId} {
+      allow read: if true;
+      allow list: if true;
+      
+      allow create: if isSignedIn() && isValidId(userId) && request.auth.uid == userId && 
+                    isValidUser(incoming()) && incoming().role == 'Customer';
+      
+      allow update: if isSignedIn() && isValidId(userId) && (request.auth.uid == userId) && 
+                    incoming().diff(existing()).affectedKeys().hasOnly(['name', 'phone', 'photo', 'language']) &&
+                    isValidUserUpdate(incoming());
+                    
+      // Only admin can change roles and wallet
+    }
+    
+    match /carts/{userId} {
+      allow read: if true;
+      allow create: if isSignedIn() && isValidId(userId) && request.auth.uid == userId && isValidCart(incoming());
+      allow update: if isSignedIn() && isValidId(userId) && request.auth.uid == userId &&
+                    incoming().diff(existing()).affectedKeys().hasOnly(['items', 'updatedAt']) &&
+                    incoming().items is list && incoming().items.size() <= 100 &&
+                    incoming().updatedAt is number;
+      allow delete: if isSignedIn() && isValidId(userId) && request.auth.uid == userId;
+    }
+
+    match /wishlists/{userId} {
+      allow read: if true;
+      allow create: if isSignedIn() && isValidId(userId) && request.auth.uid == userId && isValidWishlist(incoming());
+      allow update: if isSignedIn() && isValidId(userId) && request.auth.uid == userId &&
+                    incoming().diff(existing()).affectedKeys().hasOnly(['items', 'updatedAt']) &&
+                    incoming().items is list && incoming().items.size() <= 100 &&
+                    incoming().updatedAt is number;
+      allow delete: if isSignedIn() && isValidId(userId) && request.auth.uid == userId;
+    }
+    
+    match /orders/{orderId} {
+      allow read: if (isSignedIn() && request.auth.uid == resource.data.userId) || resource.data.userId == 'guest';
+      allow create: if isValidId(orderId) && isValidOrder(incoming());
+      allow update: if isSignedIn() && isValidId(orderId) && request.auth.uid == resource.data.userId &&
+                    incoming().diff(existing()).affectedKeys().hasOnly(['status', 'paymentStatus']);
+    }
+    match /vendor_applications/{applicationId} {
+      allow read: if isSignedIn() && (request.auth.uid == resource.data.userId || isUserAdmin());
+      allow create: if isSignedIn() && incoming().userId == request.auth.uid;
+      allow update: if isSignedIn() && (request.auth.uid == resource.data.userId || isUserAdmin());
+    }
+
+    match /vendors/{vendorId} {
+      allow read: if true; // Public can see vendors
+      allow create: if isSignedIn() && request.auth.uid == vendorId;
+      allow update, delete: if isUserAdmin() || (isUserVendor() && request.auth.uid == vendorId);
+    }
+    
+    match /vendor_wallet/{vendorId} {
+      allow read: if isUserAdmin() || (isUserVendor() && request.auth.uid == vendorId);
+      allow write: if isUserAdmin(); // Only admin can update balance (or cloud functions)
+    }
+
+    match /vendor_statistics/{vendorId} {
+      allow read: if isUserAdmin() || (isUserVendor() && request.auth.uid == vendorId);
+      allow write: if isUserAdmin(); // Cloud functions typically update this
+    }
+    match /products/{productId} {
+      allow read: if true;
+      allow create: if isUserVendor() && incoming().vendorId == request.auth.uid;
+      allow update, delete: if isUserAdmin() || (isUserVendor() && resource.data.vendorId == request.auth.uid);
+    }
+    match /inventory/{itemId} {
+      allow read: if isUserAdmin() || (isUserVendor() && resource.data.vendorId == request.auth.uid);
+      allow create: if isUserVendor() && incoming().vendorId == request.auth.uid;
+      allow update, delete: if isUserAdmin() || (isUserVendor() && resource.data.vendorId == request.auth.uid);
+    }
+    match /inventory_logs/{logId} {
+      allow read: if isUserAdmin() || (isUserVendor() && resource.data.vendorId == request.auth.uid);
+      allow create: if isUserVendor() && incoming().vendorId == request.auth.uid;
+      allow update, delete: if isUserAdmin() || (isUserVendor() && resource.data.vendorId == request.auth.uid);
+    }
+    match /product_images/{imageId} {
+      allow read: if true;
+      allow create: if isUserVendor() && incoming().vendorId == request.auth.uid;
+      allow update, delete: if isUserAdmin() || (isUserVendor() && resource.data.vendorId == request.auth.uid);
+    }
+    match /product_variants/{variantId} {
+      allow read: if true;
+      allow create: if isUserVendor() && incoming().vendorId == request.auth.uid;
+      allow update, delete: if isUserAdmin() || (isUserVendor() && resource.data.vendorId == request.auth.uid);
+    }
+    match /product_categories/{categoryId} {
+      allow read: if true;
+      allow write: if isUserAdmin();
+    }
+    match /vendor_orders/{orderId} {
+      allow read: if isUserAdmin() || (isUserVendor() && resource.data.vendorId == request.auth.uid) || (isSignedIn() && resource.data.customerId == request.auth.uid);
+      allow create: if isSignedIn();
+      allow update, delete: if isUserAdmin() || (isUserVendor() && resource.data.vendorId == request.auth.uid);
+    }
+    match /order_items/{itemId} {
+      allow read: if isUserAdmin() || (isUserVendor() && resource.data.vendorId == request.auth.uid) || (isSignedIn() && resource.data.customerId == request.auth.uid);
+      allow create: if isSignedIn();
+      allow update, delete: if isUserAdmin() || (isUserVendor() && resource.data.vendorId == request.auth.uid);
+    }
+    match /order_status_logs/{logId} {
+      allow read: if isUserAdmin() || (isUserVendor() && resource.data.vendorId == request.auth.uid) || (isSignedIn() && resource.data.customerId == request.auth.uid);
+      allow create: if isUserAdmin() || (isUserVendor() && incoming().vendorId == request.auth.uid);
+    }
+    match /vendor_notifications/{notificationId} {
+      allow read: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow create: if isUserVendor() || isUserAdmin();
+    }
+    match /vendor_wallet/{walletId} {
+      allow read: if isUserAdmin() || (isUserVendor() && resource.data.vendorId == request.auth.uid);
+      allow write: if isUserAdmin();
+      allow create: if isUserVendor() && incoming().vendorId == request.auth.uid;
+    }
+    match /wallet_transactions/{transactionId} {
+      allow read: if isUserAdmin() || (isUserVendor() && resource.data.vendorId == request.auth.uid);
+      allow create: if isUserAdmin();
+    }
+    match /withdraw_requests/{withdrawId} {
+      allow read: if isUserAdmin() || (isUserVendor() && resource.data.vendorId == request.auth.uid) || (isUserReseller() && resource.data.userId == request.auth.uid);
+      allow create: if (isUserVendor() && incoming().vendorId == request.auth.uid) || (isUserReseller() && incoming().userId == request.auth.uid);
+      allow update, delete: if isUserAdmin();
+    }
+
+    function getLockedBonus(userId) {
+      return exists(/databases/$(database)/documents/user_wallet/$(userId)) 
+        ? get(/databases/$(database)/documents/user_wallet/$(userId)).data.get('lockedBonus', 0) 
+        : 0;
+    }
+    
+    function getBonusEligibleSales(userId) {
+      return exists(/databases/$(database)/documents/user_wallet/$(userId)) 
+        ? get(/databases/$(database)/documents/user_wallet/$(userId)).data.get('bonusEligibleSales', 0) 
+        : 0;
+    }
+    
+    function getUserWallet(userId) {
+      return exists(/databases/$(database)/documents/users/$(userId)) 
+        ? get(/databases/$(database)/documents/users/$(userId)).data.get('wallet', 0) 
+        : 0;
+    }
+
+    match /withdrawals/{withdrawalId} {
+      allow read: if true;
+      allow update, delete: if true;
+      allow create: if true 
+        && request.resource.data.amount > 0
+        && (
+          (getLockedBonus(request.resource.data.userId) > 0 && getBonusEligibleSales(request.resource.data.userId) < 10)
+          ? request.resource.data.amount <= getUserWallet(request.resource.data.userId)
+          : request.resource.data.amount <= getUserWallet(request.resource.data.userId) + getLockedBonus(request.resource.data.userId)
+        );
+    }
+
+    match /user_wallet/{walletId} {
+      allow read: if true;
+      allow write: if true;
+    }
+
+    match /vendor_profiles/{vendorId} {
+      allow read: if true;
+      allow create: if isSignedIn() && request.auth.uid == vendorId;
+      allow update, delete: if isUserAdmin() || (isUserVendor() && request.auth.uid == vendorId);
+    }
+    match /vendor_settings/{vendorId} {
+      allow read: if true;
+      allow create: if isSignedIn() && request.auth.uid == vendorId;
+      allow update, delete: if isUserAdmin() || (isUserVendor() && request.auth.uid == vendorId);
+    }
+    match /vendor_themes/{vendorId} {
+      allow read: if true;
+      allow create: if isSignedIn() && request.auth.uid == vendorId;
+      allow update, delete: if isUserAdmin() || (isUserVendor() && request.auth.uid == vendorId);
+    }
+    match /vendor_reviews/{reviewId} {
+      allow read: if true;
+      allow create: if isSignedIn() && incoming().customerId == request.auth.uid;
+      allow update, delete: if isUserAdmin();
+    }
+    match /reseller_applications/{applicationId} {
+      allow read: if isSignedIn() && (request.auth.uid == resource.data.userId || isUserAdmin());
+      allow create: if isSignedIn() && incoming().userId == request.auth.uid;
+      allow update: if isSignedIn() && (request.auth.uid == resource.data.userId || isUserAdmin());
+    }
+
+    match /resellers/{resellerId} {
+      allow read: if true;
+      allow create: if isSignedIn() && request.auth.uid == resellerId;
+      allow update, delete: if isUserAdmin() || (isUserReseller() && request.auth.uid == resellerId);
+    }
+    
+    match /reseller_wallet/{resellerId} {
+      allow read: if isUserAdmin() || (isUserReseller() && request.auth.uid == resellerId) || (isSignedIn() && request.auth.uid == resellerId) || true;
+      allow write: if isUserAdmin() || (isUserReseller() && request.auth.uid == resellerId) || true; 
+      allow create: if true;
+    }
+
+    match /referral_tracking/{trackingId} {
+      allow create: if true;
+      allow read: if isUserAdmin() || (isUserReseller() && resource.data.resellerId == request.auth.uid) || true;
+    }
+
+    match /reseller_transactions/{transactionId} {
+      allow read: if isUserAdmin() || (isUserReseller() && resource.data.resellerId == request.auth.uid) || true;
+      allow create: if true;
+      allow write: if isUserAdmin() || true;
+    }
+
+    match /mlm_members/{userId} {
+      allow read: if true;
+      allow write: if true;
+    }
+
+    match /commission_rules/{ruleId} {
+      allow read: if true;
+      allow write: if true;
+    }
+    match /commission_transactions/{txId} {
+      allow read, write: if true;
+    }
+    match /bonus_rules/{ruleId} {
+      allow read: if true;
+      allow write: if true;
+    }
+    match /bonus_transactions/{txId} {
+      allow read, write: if true;
+    }
+    match /payout_logs/{logId} {
+      allow read, write: if true;
+    }
+    
+    match /mlm_tree/{treeId} {
+      allow read: if true;
+      allow write: if true;
+    }
+    
+    match /mlm_levels/{levelId} {
+      allow read: if true;
+      allow write: if true;
+    }
+    
+    match /mlm_team_statistics/{userId} {
+      allow read: if true;
+      allow write: if true;
+    }
+    
+    match /referral_codes/{codeId} {
+      allow read: if true;
+      allow write: if true;
+    }
+    match /mlm_ranks/{rankId} {
+      allow read: if true;
+      allow write: if isUserAdmin() || true;
+    }
+    
+    match /rank_history/{historyId} {
+      allow read: if true;
+      allow write: if true; // typically updated via cloud functions but allowing true for dev
+    }
+
+    match /leadership_rewards/{rewardId} {
+      allow read: if true;
+      allow write: if true;
+    }
+
+    match /achievement_badges/{badgeId} {
+      allow read: if true;
+      allow write: if isUserAdmin() || true;
+    }
+    
+    match /user_badges/{userBadgeId} {
+      allow read: if true;
+      allow write: if isUserAdmin() || true;
+    }
+
+    match /rank_requirements/{reqId} {
+      allow read: if true;
+      allow write: if isUserAdmin();
+    }
+  }
+}
