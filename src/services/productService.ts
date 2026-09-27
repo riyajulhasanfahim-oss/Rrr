@@ -182,10 +182,13 @@ function ensureGlobalRTDBListener(): void {
 
     try {
       if (Object.keys(globalVendorsMap).length === 0) {
-        const rawVendors = await rtdbGet<Record<string, any>>('vendors');
-        if (rawVendors && typeof rawVendors === 'object') {
-          globalVendorsMap = rawVendors;
-        }
+        const [rawStores, rawVendors] = await Promise.all([
+          rtdbGet<Record<string, any>>('stores', 5000).catch(() => null),
+          rtdbGet<Record<string, any>>('vendors', 5000).catch(() => null)
+        ]);
+        const safeStores = rawStores && typeof rawStores === 'object' && !('error' in rawStores) ? rawStores : {};
+        const safeVendors = rawVendors && typeof rawVendors === 'object' && !('error' in rawVendors) ? rawVendors : {};
+        globalVendorsMap = { ...safeStores, ...safeVendors };
       }
     } catch (_) {}
 
@@ -226,14 +229,15 @@ export async function fetchAllMarketplaceProducts(forceRefresh = false): Promise
   }
 
   try {
-    const [rawProducts, rawVendors] = await Promise.all([
-      rtdbGet<Record<string, any>>('products'),
-      rtdbGet<Record<string, any>>('vendors')
+    const [rawProducts, rawStores, rawVendors] = await Promise.all([
+      rtdbGet<Record<string, any>>('products', 6000),
+      rtdbGet<Record<string, any>>('stores', 6000),
+      rtdbGet<Record<string, any>>('vendors', 6000)
     ]);
 
-    if (rawVendors && typeof rawVendors === 'object') {
-      globalVendorsMap = rawVendors;
-    }
+    const safeStores = rawStores && typeof rawStores === 'object' && !('error' in rawStores) ? rawStores : {};
+    const safeVendors = rawVendors && typeof rawVendors === 'object' && !('error' in rawVendors) ? rawVendors : {};
+    globalVendorsMap = { ...safeStores, ...safeVendors, ...globalVendorsMap };
 
     const parsed = parseRTDBProducts(rawProducts || {}, globalVendorsMap);
 

@@ -253,7 +253,7 @@ if (typeof window !== 'undefined') {
       const arr = JSON.parse(stored);
       if (Array.isArray(arr)) {
         arr.forEach((id: string) => {
-          if (id) {
+          if (id && id !== 'error') {
             deletedStoreIdsSet.add(String(id).trim());
             deletedStoreIdsSet.add(String(id).trim().toLowerCase());
           }
@@ -265,9 +265,9 @@ if (typeof window !== 'undefined') {
   // Auto-subscribe to RTDB deleted_vendors node to immediately prune deleted stores across all tabs & sessions
   try {
     rtdbSubscribe('deleted_vendors', (snap: any) => {
-      if (snap && typeof snap === 'object') {
+      if (snap && typeof snap === 'object' && !('error' in snap)) {
         Object.keys(snap).forEach(deletedId => {
-          if (deletedId && !deletedStoreIdsSet.has(deletedId)) {
+          if (deletedId && deletedId !== 'error' && !deletedStoreIdsSet.has(deletedId)) {
             removeStoreFromCache(deletedId);
           }
         });
@@ -282,9 +282,18 @@ if (typeof window !== 'undefined') {
  * Checks if a store/vendor has been deleted
  */
 export function isStoreDeletedFromCache(storeId: string): boolean {
-  if (!storeId) return false;
+  if (!storeId || storeId === 'error') return false;
   const cleanId = String(storeId).trim();
+  if (!cleanId || cleanId === 'error') return false;
   const lowerId = cleanId.toLowerCase();
+
+  // If this store is currently present in in-memory cache and active, it is NOT deleted
+  const inMem = inMemoryStoreCache.get(cleanId) || inMemoryStoreCache.get(lowerId);
+  if (inMem && (inMem.status === 'active' || inMem.status === 'approved' || inMem.isVerified || inMem.verified)) {
+    deletedStoreIdsSet.delete(cleanId);
+    deletedStoreIdsSet.delete(lowerId);
+    return false;
+  }
 
   if (deletedStoreIdsSet.has(cleanId) || deletedStoreIdsSet.has(lowerId)) {
     return true;
@@ -312,8 +321,9 @@ export function isStoreDeletedFromCache(storeId: string): boolean {
  * and notifies all active components across the application.
  */
 export function removeStoreFromCache(storeId: string): void {
-  if (!storeId) return;
+  if (!storeId || storeId === 'error') return;
   const cleanId = String(storeId).trim();
+  if (!cleanId || cleanId === 'error') return;
   const lowerId = cleanId.toLowerCase();
 
   deletedStoreIdsSet.add(cleanId);
@@ -996,19 +1006,35 @@ export async function fetchOfficialStoresFromRTDB(forceRefresh = false): Promise
   inflightOfficialStoresFetch = (async () => {
     try {
       const [vendorsSnap, storesSnap, profilesSnap, deletedSnap] = await Promise.all([
-        rtdbGet<Record<string, any>>('vendors', 2500),
-        rtdbGet<Record<string, any>>('stores', 2500),
-        rtdbGet<Record<string, any>>('vendor_profiles', 2500),
-        rtdbGet<Record<string, any>>('deleted_vendors', 2500)
+        rtdbGet<Record<string, any>>('vendors', 6000),
+        rtdbGet<Record<string, any>>('stores', 6000),
+        rtdbGet<Record<string, any>>('vendor_profiles', 6000),
+        rtdbGet<Record<string, any>>('deleted_vendors', 4000)
       ]);
 
+      const safeStores = storesSnap && typeof storesSnap === 'object' && !('error' in storesSnap) ? storesSnap : {};
+      const safeVendors = vendorsSnap && typeof vendorsSnap === 'object' && !('error' in vendorsSnap) ? vendorsSnap : {};
+      const safeProfiles = profilesSnap && typeof profilesSnap === 'object' && !('error' in profilesSnap) ? profilesSnap : {};
+      const safeDeleted = deletedSnap && typeof deletedSnap === 'object' && !('error' in deletedSnap) ? deletedSnap : {};
+
       const deletedIds = new Set<string>(
-        deletedSnap && typeof deletedSnap === 'object' ? Object.keys(deletedSnap) : []
+        Object.keys(safeDeleted).filter(k => k && k !== 'error')
       );
+
+      // Do not allow actively registered stores to be in deletedIds
+      Object.keys(safeStores).forEach(sId => {
+        if (sId && safeStores[sId]?.status === 'active') {
+          deletedIds.delete(sId);
+          deletedStoreIdsSet.delete(sId);
+          deletedStoreIdsSet.delete(sId.toLowerCase());
+        }
+      });
 
       // Purge deleted vendors from local cache immediately
       deletedIds.forEach(delId => {
-        removeStoreFromCache(delId);
+        if (delId && delId !== 'error') {
+          removeStoreFromCache(delId);
+        }
       });
 
       const storeMap = new Map<string, CachedStore>();
@@ -1022,15 +1048,16 @@ export async function fetchOfficialStoresFromRTDB(forceRefresh = false): Promise
 
       // 2. Merge registered RTDB vendors & stores
       const allIds = new Set<string>([
-        ...Object.keys(vendorsSnap || {}),
-        ...Object.keys(storesSnap || {}),
-        ...Object.keys(profilesSnap || {})
+        ...Object.keys(safeStores),
+        ...Object.keys(safeVendors),
+        ...Object.keys(safeProfiles)
       ]);
 
       for (const id of allIds) {
-        const vendorData = vendorsSnap?.[id] || {};
-        const storeData = storesSnap?.[id] || {};
-        const profileData = profilesSnap?.[id] || {};
+        if (!id || id === 'error') continue;
+        const vendorData = safeVendors[id] || {};
+        const storeData = safeStores[id] || {};
+        const profileData = safeProfiles[id] || {};
 
         const linkedIds = [
           id,
@@ -1045,7 +1072,7 @@ export async function fetchOfficialStoresFromRTDB(forceRefresh = false): Promise
           profileData.storeId
         ].filter(Boolean);
 
-        const isAnyLinkedDeleted = linkedIds.some(lid => deletedIds.has(lid) || isStoreDeletedFromCache(lid));
+        const isAnyLinkedDeleted = linkedIds.some(lid => deletedIds.has(lid));
         if (isAnyLinkedDeleted) {
           linkedIds.forEach(lid => removeStoreFromCache(lid));
           continue;

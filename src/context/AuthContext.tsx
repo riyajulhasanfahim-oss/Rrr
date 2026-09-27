@@ -441,7 +441,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
       return null;
     } catch (error: any) {
-      if (error?.code === 'auth/popup-blocked') {
+      const errMsg = String(error?.message || '').toLowerCase();
+      if (
+        error?.code === 'auth/popup-blocked' || 
+        errMsg.includes('closing') || 
+        errMsg.includes('database is') ||
+        errMsg.includes('internal error')
+      ) {
         try {
           await signInWithRedirect(auth, provider);
           return null;
@@ -467,7 +473,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
       return null;
     } catch (error: any) {
-      if (error?.code === 'auth/popup-blocked') {
+      const errMsg = String(error?.message || '').toLowerCase();
+      if (
+        error?.code === 'auth/popup-blocked' || 
+        errMsg.includes('closing') || 
+        errMsg.includes('database is') ||
+        errMsg.includes('internal error')
+      ) {
         try {
           await signInWithRedirect(auth, provider);
           return null;

@@ -73,6 +73,9 @@ async function fetchRtdbRest<T>(cleanPath: string, timeoutMs: number): Promise<F
     clearTimeout(timer);
     if (res.ok) {
       const data = await res.json();
+      if (data && typeof data === 'object' && 'error' in data) {
+        return { ok: false, data: null };
+      }
       return { ok: true, data: (data !== null && data !== undefined) ? (data as T) : null };
     }
   } catch (_) {
@@ -106,7 +109,7 @@ async function fetchRtdbSdk<T>(cleanPath: string, timeoutMs: number): Promise<Fe
 /**
  * Reads a document/node from Firebase Realtime Database with high-speed race & deduplication
  */
-export async function rtdbGet<T = any>(path: string, timeoutMs: number = 2000): Promise<T | null> {
+export async function rtdbGet<T = any>(path: string, timeoutMs: number = 5000): Promise<T | null> {
   const cleanPath = sanitizePath(path);
   if (!cleanPath) return null;
 

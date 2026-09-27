@@ -1,6 +1,6 @@
 import { initializeApp, getApps, getApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
-import { initializeFirestore, getFirestore } from "firebase/firestore";
+import { initializeFirestore, getFirestore, memoryLocalCache } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
 import { getDatabase } from "firebase/database";
 import { getAnalytics, isSupported } from "firebase/analytics";
@@ -32,6 +32,7 @@ const databaseId = (config as any).firestoreDatabaseId;
 let firestoreInstance;
 try {
   const firestoreSettings: any = {
+    localCache: memoryLocalCache(),
     experimentalForceLongPolling: true,
     ignoreUndefinedProperties: true,
   };

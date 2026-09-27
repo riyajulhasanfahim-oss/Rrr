@@ -105,17 +105,21 @@ export default function ShopDomainWrapper({ children }: { children: React.ReactN
             }
           } catch (_) {}
 
-          // B. Query Firebase Realtime Database across vendor_profiles, vendors, and stores
-          const [profilesSnap, vendorsSnap, storesSnap] = await Promise.all([
-            rtdbGet<Record<string, any>>('vendor_profiles', 2500).catch(() => null),
-            rtdbGet<Record<string, any>>('vendors', 2500).catch(() => null),
-            rtdbGet<Record<string, any>>('stores', 2500).catch(() => null)
+          // B. Query Firebase Realtime Database across stores, vendors, and vendor_profiles
+          const [storesSnap, vendorsSnap, profilesSnap] = await Promise.all([
+            rtdbGet<Record<string, any>>('stores', 6000).catch(() => null),
+            rtdbGet<Record<string, any>>('vendors', 6000).catch(() => null),
+            rtdbGet<Record<string, any>>('vendor_profiles', 6000).catch(() => null)
           ]);
 
+          const safeStores = storesSnap && typeof storesSnap === 'object' && !('error' in storesSnap) ? storesSnap : {};
+          const safeVendors = vendorsSnap && typeof vendorsSnap === 'object' && !('error' in vendorsSnap) ? vendorsSnap : {};
+          const safeProfiles = profilesSnap && typeof profilesSnap === 'object' && !('error' in profilesSnap) ? profilesSnap : {};
+
           const allRecords: Record<string, any> = {
-            ...(storesSnap || {}),
-            ...(vendorsSnap || {}),
-            ...(profilesSnap || {})
+            ...safeStores,
+            ...safeVendors,
+            ...safeProfiles
           };
 
           let matchedVendorId: string | null = null;
@@ -134,6 +138,7 @@ export default function ShopDomainWrapper({ children }: { children: React.ReactN
               recSlug === targetSlug ||
               recDomain === expectedDomain ||
               recDomain === expectedLegacyDomain ||
+              recDomain.includes(targetSlug) ||
               recId.toLowerCase() === targetSlug ||
               key.toLowerCase() === targetSlug
             ) {
@@ -143,7 +148,7 @@ export default function ShopDomainWrapper({ children }: { children: React.ReactN
 
             // Fallback: match by transliterated slug of shopName or storeName
             const rawName = (record.shopName || record.storeName || record.name || '').trim();
-            if (rawName && slugifyVendorName(rawName) === targetSlug) {
+            if (rawName && (slugifyVendorName(rawName) === targetSlug || rawName.toLowerCase().replace(/\s+/g, '-') === targetSlug)) {
               matchedVendorId = recId || key;
               break;
             }
@@ -171,16 +176,20 @@ export default function ShopDomainWrapper({ children }: { children: React.ReactN
             setSubdomainSlug(targetDomain);
           }
 
-          const [profilesSnap, vendorsSnap, storesSnap] = await Promise.all([
-            rtdbGet<Record<string, any>>('vendor_profiles', 2500).catch(() => null),
-            rtdbGet<Record<string, any>>('vendors', 2500).catch(() => null),
-            rtdbGet<Record<string, any>>('stores', 2500).catch(() => null)
+          const [storesSnap, vendorsSnap, profilesSnap] = await Promise.all([
+            rtdbGet<Record<string, any>>('stores', 6000).catch(() => null),
+            rtdbGet<Record<string, any>>('vendors', 6000).catch(() => null),
+            rtdbGet<Record<string, any>>('vendor_profiles', 6000).catch(() => null)
           ]);
 
+          const safeStores = storesSnap && typeof storesSnap === 'object' && !('error' in storesSnap) ? storesSnap : {};
+          const safeVendors = vendorsSnap && typeof vendorsSnap === 'object' && !('error' in vendorsSnap) ? vendorsSnap : {};
+          const safeProfiles = profilesSnap && typeof profilesSnap === 'object' && !('error' in profilesSnap) ? profilesSnap : {};
+
           const allRecords: Record<string, any> = {
-            ...(storesSnap || {}),
-            ...(vendorsSnap || {}),
-            ...(profilesSnap || {})
+            ...safeStores,
+            ...safeVendors,
+            ...safeProfiles
           };
 
           let matchedVendorId: string | null = null;
@@ -189,9 +198,11 @@ export default function ShopDomainWrapper({ children }: { children: React.ReactN
             if (!record || typeof record !== 'object') continue;
 
             const customDom = (record.customDomain || '').toLowerCase().trim().replace('https://', '').replace('http://', '').split('/')[0];
-            const isVerified = record.customDomainStatus === 'Verified' || record.verificationStatus === 'Verified' || record.verified === true;
+            const freeDom = (record.freeShopDomain || '').toLowerCase().trim().replace('https://', '').replace('http://', '').split('/')[0];
+            const vStatus = String(record.verificationStatus || record.status || '').toLowerCase();
+            const isVerified = record.customDomainStatus === 'Verified' || vStatus === 'verified' || record.verified === true || record.isVerified === true;
 
-            if (customDom === targetDomain && isVerified) {
+            if ((customDom === targetDomain || freeDom === targetDomain) && isVerified) {
               matchedVendorId = record.vendorId || record.userId || record.storeId || record.id || key;
               break;
             }
