@@ -1,3 +1,2 @@
-# Cloudflare Pages / Edge Hosting SPA Fallback Rules
+# Cloudflare Pages / Edge Hosting Rules
 /api/*  /api/:splat  200
-/*      /            200
